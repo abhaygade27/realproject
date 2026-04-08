@@ -1,3 +1,13 @@
+---
+title: Real Project Environment
+emoji: "🤖"
+colorFrom: "blue"
+colorTo: "green"
+app_file: "app.py"  # if your main app file is app.py
+sdk: "gradio"        # or "streamlit", depending on your app
+pinned: true
+---
+
 # RealProject
 
 AI Exam Evaluator using OpenEnv + FastAPI
