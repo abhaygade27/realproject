@@ -73,36 +73,125 @@
 #         return self.current_task
 
 
+# import json
+# import random
+# import os
+# from typing import Optional
+# from server.models import Observation, Action, Reward
+
+
+
+# class ExamEnv:
+#     def __init__(self, dataset_path: str = "dataset.json"):
+#         base_dir = os.path.dirname(__file__)
+#         self.dataset_path = os.path.join(base_dir, dataset_path)
+#         self.current_task = None
+
+#     # 🔹 Load dataset dynamically
+#     def load_data(self):
+#         with open(self.dataset_path, "r") as f:
+#             return json.load(f)["tasks"]
+
+#     def reset(self, difficulty: Optional[str] = None):
+#         # 🔹 Always load the latest dataset here
+#         self.data = self.load_data()
+
+#         if difficulty:
+#             filtered = [t for t in self.data if t["difficulty"] == difficulty]
+#             if not filtered:
+#                 raise ValueError("No tasks found")
+#             self.current_task = random.choice(filtered)
+#         else:
+#             self.current_task = random.choice(self.data)
+
+#         return Observation(
+#             question=self.current_task["question"],
+#             student_answer=self.current_task["student_answer"],
+#             rubric=self.current_task["rubric"]
+#         )
+
+#     def step(self, action: Action):
+#         expected = self.current_task["expected_score"]
+#         diff = abs(action.score - expected)
+
+#         print(f"Expected: {expected}, Predicted: {action.score}, Diff: {diff}")
+ 
+#         # if diff == 0:
+#         #     reward_value = 1.0
+            
+#         # elif diff <= 1:
+#         #     reward_value = 0.8
+            
+#         # elif diff <= 2:
+#         #     reward_value = 0.5
+            
+#         # else:
+#         #     reward_value = 0.0
+#         reward_value = max(0, 1 - (diff / 10))
+            
+
+#         reward = Reward(
+#             value=reward_value
+
+#         )
+
+#         done = True
+
+#         info = {
+#             "expected_score": expected,
+#             "agent_score": action.score
+#         }
+
+#         # Return a new observation (same question)
+#         obs = Observation(
+#             question=self.current_task["question"],
+#             student_answer=self.current_task["student_answer"],
+#             rubric=self.current_task["rubric"]
+#         )
+
+#         return obs, reward, done, info
+
+#     def state(self):
+#         return self.current_task
+
 import json
 import random
 import os
 from typing import Optional
-from .models import Observation, Action, Reward
-
-
+from server.models import Observation, Action, Reward
 
 class ExamEnv:
-    def __init__(self, dataset_path: str = "dataset.json"):
-        base_dir = os.path.dirname(__file__)
-        self.dataset_path = os.path.join(base_dir, dataset_path)
+    def __init__(self, dataset_path: Optional[str] = None):
+        # Default: dataset.json in project root
+        self.prev_diff = None
+        if dataset_path is None:
+            base_dir = os.path.dirname(os.path.dirname(__file__))  # one level up from server/
+            dataset_path = os.path.join(base_dir, "dataset.json")
+        self.dataset_path = os.path.abspath(dataset_path)
         self.current_task = None
+        self.data = []
+        self.current_step = 0
 
-    # 🔹 Load dataset dynamically
     def load_data(self):
+        if not os.path.exists(self.dataset_path):
+            raise FileNotFoundError(f"Dataset not found at {self.dataset_path}")
         with open(self.dataset_path, "r") as f:
             return json.load(f)["tasks"]
 
     def reset(self, difficulty: Optional[str] = None):
-        # 🔹 Always load the latest dataset here
+        self.prev_diff = None
         self.data = self.load_data()
+        self.current_step = 0
+        if not self.data:
+            raise ValueError("Dataset is empty")
 
+        filtered = self.data
         if difficulty:
-            filtered = [t for t in self.data if t["difficulty"] == difficulty]
+            filtered = [t for t in self.data if t.get("difficulty") == difficulty]
             if not filtered:
-                raise ValueError("No tasks found")
-            self.current_task = random.choice(filtered)
-        else:
-            self.current_task = random.choice(self.data)
+                raise ValueError(f"No tasks found for difficulty: {difficulty}")
+
+        self.current_task = random.choice(filtered)
 
         return Observation(
             question=self.current_task["question"],
@@ -110,46 +199,81 @@ class ExamEnv:
             rubric=self.current_task["rubric"]
         )
 
+    # def step(self, action: Action):
+    #     self.current_step += 1
+    #     if self.current_task is None:
+    #         raise RuntimeError("Environment not reset. Call reset() first.")
+
+    #     expected = self.current_task["expected_score"]
+    #     diff = abs(action.score - expected)
+    #     reward_value = max(0, 1 - (diff / 10))
+        
+        
+    #     reward = Reward(value=reward_value)
+    #     done = False
+    #     if self.current_step >= 5:
+    #        done = True
+    #     info = {
+    #         "expected_score": expected,
+    #         "agent_score": action.score
+    #     }
+
+    #     obs = Observation(
+    #         question=self.current_task["question"],
+    #         student_answer=self.current_task["student_answer"],
+    #         rubric=self.current_task["rubric"]
+    #     )
+
+    #     return obs, reward, done, info
+
     def step(self, action: Action):
-        expected = self.current_task["expected_score"]
-        diff = abs(action.score - expected)
+      self.current_step += 1
 
-        print(f"Expected: {expected}, Predicted: {action.score}, Diff: {diff}")
- 
-        # if diff == 0:
-        #     reward_value = 1.0
-            
-        # elif diff <= 1:
-        #     reward_value = 0.8
-            
-        # elif diff <= 2:
-        #     reward_value = 0.5
-            
-        # else:
-        #     reward_value = 0.0
-        reward_value = max(0, 1 - (diff / 10))
-            
+      if self.current_task is None:
+        raise RuntimeError("Environment not reset. Call reset() first.")
 
-        reward = Reward(
-            value=reward_value
+      expected = self.current_task["expected_score"]
+      predicted = action.score
 
-        )
+      diff = abs(predicted - expected)
 
-        done = True
+    # 🔥 BASE reward (how close)
+      base_reward = max(0.0, 1.0 - (diff / 10.0))
 
-        info = {
-            "expected_score": expected,
-            "agent_score": action.score
-        }
+    # 🔥 PROGRESS reward (improvement over previous step)
+      if self.prev_diff is None:
+        progress_bonus = 0.0
+      else:
+        if diff < self.prev_diff:
+            progress_bonus = 0.3   # improved
+        elif diff > self.prev_diff:
+            progress_bonus = -0.3  # worse
+        else:
+            progress_bonus = 0.0   # same
 
-        # Return a new observation (same question)
-        obs = Observation(
-            question=self.current_task["question"],
-            student_answer=self.current_task["student_answer"],
-            rubric=self.current_task["rubric"]
-        )
+      reward_value = max(0.0, min(1.0, base_reward + progress_bonus))
 
-        return obs, reward, done, info
+    # save for next step
+      self.prev_diff = diff
+
+      reward = Reward(value=reward_value)
+
+    # 🔥 ensure 5 steps
+      done = self.current_step >= 5
+
+      info = {
+        "expected_score": expected,
+        "agent_score": predicted,
+        "diff": diff
+      }
+
+      obs = Observation(
+        question=self.current_task["question"],
+        student_answer=self.current_task["student_answer"],
+        rubric=self.current_task["rubric"]
+      )
+
+      return obs, reward, done, info
 
     def state(self):
         return self.current_task

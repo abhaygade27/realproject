@@ -38,7 +38,7 @@
 #     return env.state()
 
 from fastapi import FastAPI
-from .environment import ExamEnv
+from server.environment import ExamEnv
 # from envs.realproject.environment import ExamEnv
 
 
