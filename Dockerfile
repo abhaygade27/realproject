@@ -48,20 +48,22 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Upgrade pip
-RUN pip install --no-cache-dir pip --upgrade
+RUN pip install --no-cache-dir --upgrade pip
 
 # Copy requirements
 COPY requirements.txt /tmp/requirements.txt
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r /tmp/requirements.txt \
+# Install Python dependencies (with CPU torch support)
+RUN pip install --no-cache-dir \
+    -r /tmp/requirements.txt \
+    -f https://download.pytorch.org/whl/torch_stable.html \
     gradio[oauth,mcp]==6.11.0 \
-    uvicorn[standard] \
-    websockets>=10.4 \
+    "uvicorn[standard]" \
+    "websockets>=10.4" \
     spaces
 
-# Copy all your code
+# Copy app files
 COPY . .
 
-# Default command (change if your entrypoint is different)
+# Run app
 CMD ["python", "app.py"]
