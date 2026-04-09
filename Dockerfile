@@ -69,4 +69,5 @@ COPY . .
 EXPOSE 7860
 
 # Run app (IMPORTANT: dynamic port handled inside app.py)
-CMD ["python", "server/app.py"]
+# CMD ["python", "server/app.py"]
+CMD ["uvicorn", "server.app:app", "--host", "0.0.0.0", "--port", "7860"]
