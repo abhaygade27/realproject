@@ -3,7 +3,7 @@ name = "ai-exam-evaluator"
 version = "0.1.0"
 description = "AI Exam Evaluator: Automated grading system with rubric alignment."
 authors = [
-    { name = "Vitthal Chandane", email = "vitthal@example.com" }
+    { name = "Abhay Gade", email = "abhaygade27@gmail.com" }
 ]
 license = "MIT"
 
@@ -16,6 +16,9 @@ dependencies = [
     "openenv-core",
     "pydantic"
 ]
+
+[project.scripts]
+server = "app:app"
 
 [build-system]
 requires = ["setuptools>=61.0"]
