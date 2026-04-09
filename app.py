@@ -4,6 +4,7 @@ from server.environment import ExamEnv
 
 # from envs.realproject.environment import ExamEnv
 import os
+import uvicorn
 
 
 
