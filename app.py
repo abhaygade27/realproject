@@ -43,7 +43,8 @@ from server.environment import ExamEnv
 # from envs.realproject.environment import ExamEnv
 
 
-
+import os
+port = int(os.environ.get("PORT", 7860))
 
 from server.models import Observation, Action, Reward
 

@@ -36,7 +36,8 @@
 # # CMD ["uvicorn", "server.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 # CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
 # Use Python 3.10 (compatible with torch 2.5.1)
-FROM python:3.10-slim
+# FROM python:3.10-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
