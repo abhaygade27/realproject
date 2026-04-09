@@ -7,12 +7,12 @@
 # torch
 # requests
 
-fastapi
-uvicorn[standard]
-python-dotenv
+fastapi==0.95.2
+uvicorn[standard]==0.22.0
+python-dotenv==1.2.2
 openai==1.30.1
-pydantic
+pydantic==2.41.5
 transformers==4.41.2
-torch==2.5.1   # <-- upgrade from 2.2.2
-requests
-httpx
+torch==2.5.1
+requests==2.33.1
+httpx==0.28.1
