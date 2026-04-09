@@ -39,12 +39,13 @@
 
 from fastapi import FastAPI
 from server.environment import ExamEnv
+
 # from envs.realproject.environment import ExamEnv
 
 
 
 
-from .models import Observation, Action, Reward
+from server.models import Observation, Action, Reward
 
 app = FastAPI()
 
