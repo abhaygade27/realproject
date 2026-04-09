@@ -41,7 +41,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# System dependencies
 RUN apt-get update && apt-get install -y \
     git git-lfs ffmpeg libsm6 libxext6 cmake rsync libgl1 curl \
     && git lfs install \
@@ -51,19 +51,18 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --no-cache-dir --upgrade pip
 
 # Copy requirements
-COPY requirements.txt /tmp/requirements.txt
+COPY requirements.txt .
 
-# Install Python dependencies (with CPU torch support)
+# Install dependencies (CPU-only torch to avoid crashes)
 RUN pip install --no-cache-dir \
-    -r /tmp/requirements.txt \
+    -r requirements.txt \
     -f https://download.pytorch.org/whl/torch_stable.html \
     gradio[oauth,mcp]==6.11.0 \
     "uvicorn[standard]" \
     "websockets>=10.4" \
     spaces
 
-# Copy app files
+# Copy app
 COPY . .
 
-# Run app
 CMD ["python", "app.py"]

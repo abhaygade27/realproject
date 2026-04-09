@@ -7,12 +7,9 @@
 # torch
 # requests
 
-torch==2.5.1
-transformers==4.41.2
-gradio[oauth,mcp]==6.11.0
-uvicorn>=0.14.0
-websockets>=10.4
-spaces
+torch==2.5.1+cpu
+transformers==4.40.2
+tokenizers==0.15.2
 fastapi>=0.95
 python-dotenv
 openai>=1.30.1
