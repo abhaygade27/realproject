@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 
 # Set working directory
 WORKDIR /app
-ENV PYTHONPATH=/app/server
+# ENV PYTHONPATH=/app/server
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt /app/
