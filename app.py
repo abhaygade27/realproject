@@ -5,8 +5,7 @@ from server.environment import ExamEnv
 # from envs.realproject.environment import ExamEnv
 
 
-import os
-port = int(os.environ.get("PORT", 7860))
+
 
 from server.models import Observation, Action, Reward
 
@@ -46,3 +45,8 @@ def step(action: Action):
 def state():
     # Always return current state
     return env.state()
+    
+    
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 7860))  # dynamic port
+    uvicorn.run(app, host="0.0.0.0", port=port)
