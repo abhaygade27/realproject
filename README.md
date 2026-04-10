@@ -3,8 +3,8 @@ title: Real Project Environment
 emoji: "🤖"
 colorFrom: "blue"
 colorTo: "green"
-app_file: "app.py"  # if your main app file is app.py
-sdk: "gradio"        # or "streamlit", depending on your app
+sdk: "docker"
+app_file: Dockerfile
 pinned: true
 ---
 
