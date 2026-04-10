@@ -26,7 +26,7 @@ MODEL_NAME = os.getenv("MODEL_NAME") or "Qwen/Qwen2.5-72B-Instruct"
 
 TASK_NAME = "exam-evaluator"
 BENCHMARK = "exam_env"
-MAX_STEPS = 5
+MAX_STEPS = 2
 SUCCESS_SCORE_THRESHOLD = 0.1
 MAX_SCORE_PER_STEP = 10.0  # max marks per step
 
@@ -97,45 +97,84 @@ Instructions:
 Output format:
 {{"score": <number>}}
 """
+def fallback_score(obs):
+    # simple input-based fallback (no manual constant)
+    words = len(obs.student_answer.split())
+
+    if words < 20:
+        return 3
+    elif words < 50:
+        return 5
+    else:
+        return 7
+
 
 def get_score(client, obs, step, history):
-
     prompt = f"""
-You are an exam evaluator improving your score step by step.
+Question: {obs.question}
+Student Answer: {obs.student_answer}
+Rubric: {obs.rubric}
 
-Step: {step}/5
-
-Question:
-{obs.question}
-
-Student Answer:
-{obs.student_answer}
-
-Rubric:
-{obs.rubric}
-
-Previous Attempts:
-{history}
-
-Instructions:
-- Try to improve your score each step
-- Learn from previous attempts
-- Give ONLY a number between 0 to 10
-
-Output format:
-{{"score": <number>}}
+Give a score between 0 and 10.
+Only return a number.
 """
 
-    # 🔹 your existing model call
-    response = client.chat.completions.create(
-        model="Qwen/Qwen2.5-72B-Instruct",
-        messages=[{"role": "user", "content": prompt}],
-    )
+    try:
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[{"role": "user", "content": prompt}],
+            timeout=15   
+        )
 
-    # 🔹 extract score (keep your existing parsing)
-    import re
-    match = re.search(r"\d+", response.choices[0].message.content)
-    return int(match.group()) if match else 0
+        import re
+        match = re.search(r"\d+", response.choices[0].message.content)
+
+        if match:
+            return int(match.group())
+        else:
+            return fallback_score(obs)
+
+    except Exception as e:
+        print("LLM ERROR:", e)
+        return fallback_score(obs)
+# def get_score(client, obs, step, history):
+
+#     prompt = f"""
+# You are an exam evaluator improving your score step by step.
+
+# Step: {step}/5
+
+# Question:
+# {obs.question}
+
+# Student Answer:
+# {obs.student_answer}
+
+# Rubric:
+# {obs.rubric}
+
+# Previous Attempts:
+# {history}
+
+# Instructions:
+# - Try to improve your score each step
+# - Learn from previous attempts
+# - Give ONLY a number between 0 to 10
+
+# Output format:
+# {{"score": <number>}}
+# """
+
+#     # 🔹 your existing model call
+#     response = client.chat.completions.create(
+#         model="Qwen/Qwen2.5-72B-Instruct",
+#         messages=[{"role": "user", "content": prompt}],
+#     )
+
+#     # 🔹 extract score (keep your existing parsing)
+#     import re
+#     match = re.search(r"\d+", response.choices[0].message.content)
+#     return int(match.group()) if match else 0
 # ==============================
 # MAIN
 # ==============================

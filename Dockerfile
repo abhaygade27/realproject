@@ -58,9 +58,14 @@ WORKDIR /app
 # Copy requirements first (better caching)
 COPY requirements.txt .
 
+ENV PIP_NO_CACHE_DIR=1
+ENV TRANSFORMERS_NO_TF=1
+ENV TRANSFORMERS_NO_FLAX=1
+ENV HF_HUB_DISABLE_SYMLINKS_WARNING=1
 # Upgrade pip + install deps
 RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+# RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --prefer-binary -r requirements.txt
 
 # Copy project files
 COPY . .
