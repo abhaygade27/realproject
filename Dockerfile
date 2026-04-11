@@ -46,10 +46,10 @@ ENV PYTHONUNBUFFERED=1
 
 # Install system deps
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    gcc \
-    libffi-dev \
-    python3-dev \
+    # build-essential \
+    # gcc \
+    # libffi-dev \
+    # python3-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
