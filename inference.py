@@ -221,8 +221,14 @@ from server.models import Action
 # CONFIG
 # ==============================
 
-API_KEY = os.getenv("OPENAI_API_KEY")
-API_BASE_URL = os.getenv("API_BASE_URL") or "https://router.huggingface.co/v1"
+API_KEY = os.getenv("API_KEY")
+API_BASE_URL = os.getenv("API_BASE_URL" , "https://router.huggingface.co/v1")
+# API_KEY = os.environ["API_KEY"]
+# API_BASE_URL = os.environ["API_BASE_URL"]
+
+# API_KEY = os.environ.get("API_KEY", "dummy_key")
+# API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1")
+
 MODEL_NAME = os.getenv("MODEL_NAME") or "Qwen/Qwen2.5-72B-Instruct"
 
 TASK_NAME = "exam-evaluator"
@@ -273,8 +279,8 @@ def fallback_score(obs):
 
 def get_score(client, obs, step, history):
     # 🔥 If no client → fallback immediately
-    if client is None:
-        return fallback_score(obs)
+    # if client is None:
+    #     return fallback_score(obs)
 
     prompt = f"""
 Question: {obs.question}
@@ -308,16 +314,117 @@ Only return a number.
 # MAIN
 # ==============================
 
+# def main():
+  
+#     client = None
+#     if API_KEY:
+#         try:
+#             client  = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+#         except Exception as e:
+#             print("Client init failed:", e)
+#             client = None
+
+#     client = OpenAI(
+#     base_url=API_BASE_URL,
+#     api_key=API_KEY
+#      )
+#     env = ExamEnv()
+
+
+#     client = OpenAI(
+#     base_url=API_BASE_URL,
+#     api_key=API_KEY
+# )
+
+# 🔥🔥 ADD THIS BLOCK HERE (VERY IMPORTANT)
+
+
 def main():
-    # 🔥 SAFE CLIENT INIT
+    print("🚀 MAIN STARTED")
+
+    # ✅ Create client ONLY ONCE
     client = None
     if API_KEY:
         try:
-            client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+            client = OpenAI(
+                base_url=API_BASE_URL,
+                api_key=API_KEY
+            )
+            print("Client created")
         except Exception as e:
             print("Client init failed:", e)
-            client = None
 
+    # ✅ Warmup call
+    if client:
+        try:
+            response = client.chat.completions.create(
+                model=MODEL_NAME,
+                messages=[{"role": "user", "content": "hello"}]
+            )
+            print("Warmup OK")
+        except Exception as e:
+            print("Warmup failed:", e)
+
+    # ✅ Create environment
+    env = ExamEnv()
+
+    rewards: List[float] = []
+    steps_taken = 0
+    score = 0.0
+    success = False
+
+    log_start(TASK_NAME, BENCHMARK, MODEL_NAME)
+
+    try:
+        obs = env.reset()
+        if isinstance(obs, tuple):
+            obs = obs[0]
+
+        history = []
+
+        for step in range(1, MAX_STEPS + 1):
+
+            score_pred = get_score(client, obs, step, history)
+            action = Action(score=score_pred)
+
+            obs, reward, done, info = env.step(action)
+
+            if hasattr(reward, "value"):
+                reward = reward.value
+            elif hasattr(reward, "score"):
+                reward = reward.score
+            else:
+                reward = float(reward) if reward is not None else 0.0
+
+            rewards.append(reward)
+            steps_taken = step
+
+            history.append(f"Step {step}: score={score_pred}, reward={reward}")
+
+            log_step(step, str(int(score_pred)), reward, done, None)
+
+            if done:
+                break
+
+        score = sum(rewards) / len(rewards) if rewards else 0.0
+        score = min(max(score, 0.0), 1.0)
+        success = score >= SUCCESS_SCORE_THRESHOLD
+
+    except Exception as e:
+        print("FATAL ERROR:", e)
+
+    finally:
+        log_end(success, steps_taken, score, rewards)
+# try:
+    # response = client.chat.completions.create(
+    #     model=MODEL_NAME,
+    #     messages=[{"role": "user", "content": "hello"}]
+#     # )
+#     print("Warmup OK")
+# except Exception as e:
+#     print("Warmup failed:", e)
+
+# Continue your code
     env = ExamEnv()
 
     rewards: List[float] = []
@@ -369,7 +476,10 @@ def main():
     finally:
         log_end(success, steps_taken, score, rewards)
 
-# ==============================
+        # ==============================
 
 if __name__ == "__main__":
     main()
+
+# ==============================
+
