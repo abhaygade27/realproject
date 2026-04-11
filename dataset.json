@@ -1,7 +1,6 @@
 {
   "tasks": [
-    { "id": 1, "difficulty": "easy", "question": "What is a computer?", "student_answer": "A computer is an electronic device that processes data.", "rubric": { "definition": 5, "clarity": 5 }, "expected_score": 8 },
-    { "id": 2, "difficulty": "easy", "question": "What is software?", "student_answer": "Software is a set of programs that run on a computer.", "rubric": { "definition": 5, "examples": 5 }, "expected_score": 7 },
+    
     { "id": 1, "difficulty": "easy", "question": "What is a computer?", "student_answer": "A computer is an electronic device that processes data.", "rubric": { "definition": 5, "clarity": 5 }, "expected_score": 8 },
     { "id": 2, "difficulty": "easy", "question": "What is software?", "student_answer": "Software is a set of programs that run on a computer.", "rubric": { "definition": 5, "examples": 5 }, "expected_score": 7 },
     { "id": 3, "difficulty": "easy", "question": "What is hardware?", "student_answer": "Hardware refers to physical parts of a computer.", "rubric": { "definition": 5, "examples": 5 }, "expected_score": 8 },

@@ -1,5 +1,4 @@
 
-
 import json
 import random
 import os
@@ -85,7 +84,7 @@ class ExamEnv:
             "expected_score": expected,
             "agent_score": predicted,
             "diff": diff,
-            "task_id": self.current_task.get("task_id", "unknown")
+            "task_id": self.current_task.get("id")
         }
 
         obs = Observation(
