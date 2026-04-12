@@ -18,7 +18,7 @@ uvicorn[standard]
 python-dotenv
 openai>=1.30.1
 pydantic
-# transformers
-# torch==2.2.2 --index-url https://download.pytorch.org/whl/cpu
+transformers
+torch==2.2.2 --index-url https://download.pytorch.org/whl/cpu
 requests
 httpx

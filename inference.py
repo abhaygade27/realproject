@@ -779,6 +779,7 @@
 # if __name__ == "__main__":
 #     main()
 import os
+import re
 from typing import List, Optional
 from dotenv import load_dotenv
 
@@ -792,16 +793,16 @@ from server.models import Action
 # CONFIG
 # ==============================
 
-API_KEY = os.environ["API_KEY"]
-API_BASE_URL = os.environ["API_BASE_URL"]
+# Use .get() to prevent KeyErrors if variables are missing
+API_KEY = os.environ.get("API_KEY")
+API_BASE_URL = os.environ.get("API_BASE_URL")
 MODEL_NAME = os.getenv("MODEL_NAME") or "Qwen/Qwen2.5-72B-Instruct"
 
 BENCHMARK = "exam_env"
-
 MAX_STEPS = 1   # keep it fast
 SUCCESS_SCORE_THRESHOLD = 0.1
 
-# 🔥 DEFINE 3 TASKS (IMPORTANT FIX)
+# 3 DISTINCT TASKS AS REQUIRED
 TASKS = [
     ("exam-evaluator-easy", "easy"),
     ("exam-evaluator-medium", "medium"),
@@ -840,7 +841,7 @@ Student Answer: {obs.student_answer}
 Rubric: {obs.rubric}
 
 Give a score between 0 and 10.
-Only return a number.
+Only return the number.
 """
 
     try:
@@ -850,8 +851,8 @@ Only return a number.
             timeout=15
         )
 
-        import re
-        match = re.search(r"\d+", response.choices[0].message.content)
+        content = response.choices[0].message.content
+        match = re.search(r"\d+", content)
 
         if match:
             return int(match.group())
@@ -868,6 +869,10 @@ Only return a number.
 # ==============================
 
 def main():
+    if not API_KEY:
+        print("FATAL ERROR: API_KEY missing from environment.")
+        return
+
     client = OpenAI(
         base_url=API_BASE_URL,
         api_key=API_KEY
@@ -876,46 +881,51 @@ def main():
     env = ExamEnv()
 
     try:
-        # 🔥 RUN EACH TASK SEPARATELY
         for task_name, difficulty in TASKS:
-
             rewards: List[float] = []
             steps_taken = 0
 
             log_start(task_name, BENCHMARK, MODEL_NAME)
 
+            # reset() uses the new filtering logic in environment.py
             obs = env.reset(difficulty=difficulty)
 
             for step in range(1, MAX_STEPS + 1):
-
                 score_pred = get_score(client, obs)
+                
+                # Create the action object
                 action = Action(score=score_pred)
 
-                obs, reward, done, info = env.step(action)
+                obs, reward_obj, done, info = env.step(action)
 
-                # normalize reward
-                if hasattr(reward, "value"):
-                    reward = reward.value
-                else:
-                    reward = float(reward)
+                # Robust extraction of the reward value
+                try:
+                    curr_reward = float(getattr(reward_obj, "value", reward_obj))
+                except (TypeError, ValueError):
+                    curr_reward = 0.5
 
-                rewards.append(reward)
+                # DOUBLE-CLAMP: Ensure execution log reward is strictly (0,1)
+                curr_reward = max(0.01, min(0.99, curr_reward))
+
+                rewards.append(curr_reward)
                 steps_taken += 1
 
-                log_step(step, str(score_pred), reward, done, None)
+                log_step(step, str(score_pred), curr_reward, done, None)
 
                 if done:
                     break
 
-            # 🔥 FINAL SCORE PER TASK
-            score = sum(rewards) / len(rewards) if rewards else 0.0
-            score = min(max(score, 0.0), 1.0)
-            success = score >= SUCCESS_SCORE_THRESHOLD
+            # Calculate the final task average
+            score = sum(rewards) / len(rewards) if rewards else 0.5
+            
+            # FINAL CLAMP: Must stay inside 0.01 to 0.99 for the log
+            final_clamped_score = float(max(0.01, min(0.99, score)))
+            success = final_clamped_score >= SUCCESS_SCORE_THRESHOLD
 
-            log_end(success, steps_taken, score, rewards)
+            log_end(success, steps_taken, final_clamped_score, rewards)
 
     except Exception as e:
-        print("FATAL ERROR:", e)
+        print("FATAL SYSTEM ERROR:", e)
 
 
 if __name__ == "__main__":
