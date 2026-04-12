@@ -79,26 +79,40 @@ class Grader:
 
     def grade(self, observation: Dict[str, Any], action: Dict[str, Any]) -> float:
         """
-        observation: contains 'rubric_score'
-        action: contains 'score' (agent prediction)
-        returns: reward between 0.0 and 1.0
+        observation: {question, student_answer, rubric_score}
+        action: {score}
         """
-        try:
-            true_score = float(observation.get("rubric_score", 0))
-            pred_score = float(action.get("score", 0))
 
-            # reward = 1 - normalized difference
+        try:
+            # ✅ Safe extraction
+            true_score = float(observation.get("rubric_score", 0))
+
+            # Handle both dict and string actions (VERY IMPORTANT)
+            if isinstance(action, dict):
+                pred_score = float(action.get("score", 0))
+            else:
+                # if action comes as string → convert
+                pred_score = float(action)
+
+            # ✅ Reward calculation
             diff = abs(true_score - pred_score) / 10.0
             reward = max(0.0, 1.0 - diff)
 
-            # 🔹 Structured log for validator
+            # ✅ STRONG LOGGING (validator-friendly)
             print(
-                f"[GRADER] task={self.task_id} | true_score={true_score:.2f} "
-                f"| pred_score={pred_score:.2f} | reward={reward:.3f}",
+                f"[GRADER] task={self.task_id} | "
+                f"true={true_score:.2f} | pred={pred_score:.2f} | reward={reward:.3f}",
                 flush=True
             )
 
             return reward
+
+        except Exception as e:
+            print(
+                f"[GRADER] task={self.task_id} | ERROR: {str(e)}",
+                flush=True
+            )
+            return 0.0
         except Exception as e:
             print(f"[GRADER] task={self.task_id} | error={e}", flush=True)
             return 0.0

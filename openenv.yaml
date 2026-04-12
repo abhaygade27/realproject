@@ -21,30 +21,32 @@ dependencies:
 
 environment:
   observation_space:
-    type: string
-    description: "Student answer text input"
+    type: object   # ✅ FIXED (was string)
+    description: "Contains question, student_answer, rubric_score"
+
   action_space:
-    type: string
-    description: "Agent-generated rubric score or feedback"
+    type: object   # ✅ FIXED (was string)
+    description: "Agent-generated score"
+
   reward_space:
     type: float
     range: [0.0, 1.0]
-    description: "Reward based on similarity between agent score and rubric score"
+    description: "Reward based on similarity"
 
 tasks:
   - id: easy
     description: "Simple factual question grading"
     dataset: dataset.json
-    grader: grader.py
+    grader: ./grader.py   # ✅ FIXED PATH
 
   - id: medium
     description: "Moderate reasoning question grading"
     dataset: dataset.json
-    grader: grader.py
+    grader: ./grader.py   # ✅ FIXED PATH
 
   - id: hard
     description: "Complex analytical question grading"
     dataset: dataset.json
-    grader: grader.py
+    grader: ./grader.py   # ✅ FIXED PATH
 
 baseline_inference: inference.py
