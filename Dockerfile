@@ -34,7 +34,7 @@ WORKDIR /app
 
 # ✅ Install system dependencies (minimal but important)
 RUN apt-get update && apt-get install -y \
-    build-essential \
+    # build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 

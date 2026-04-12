@@ -78,41 +78,35 @@ class Grader:
         self.task_id = task_id
 
     def grade(self, observation: Dict[str, Any], action: Dict[str, Any]) -> float:
-        """
-        observation: {question, student_answer, rubric_score}
-        action: {score}
-        """
-
         try:
-            # ✅ Safe extraction
-            true_score = float(observation.get("rubric_score", 0))
-
-            # Handle both dict and string actions (VERY IMPORTANT)
-            if isinstance(action, dict):
-                pred_score = float(action.get("score", 0))
+            # Note: your environment.py passes 'expected_score' in the context_dict
+            # We use .get() to check both 'rubric_score' and 'expected_score'
+            true_score = float(observation.get("expected_score", observation.get("rubric_score", 0)))
+            
+            # Action is passed as an object or dict; we handle both
+            if hasattr(action, "score"):
+                pred_score = float(action.score)
             else:
-                # if action comes as string → convert
-                pred_score = float(action)
+                pred_score = float(action.get("score", 0))
 
-            # ✅ Reward calculation
             diff = abs(true_score - pred_score) / 10.0
             reward = max(0.0, 1.0 - diff)
 
-            # ✅ STRONG LOGGING (validator-friendly)
             print(
-                f"[GRADER] task={self.task_id} | "
-                f"true={true_score:.2f} | pred={pred_score:.2f} | reward={reward:.3f}",
+                f"[GRADER] task={self.task_id} | true={true_score:.2f} "
+                f"| pred={pred_score:.2f} | reward={reward:.3f}",
                 flush=True
             )
-
             return reward
+        except Exception as e:
+            print(f"[GRADER] Error: {e}", flush=True)
+            return 0.0
 
-        except Exception as e:
-            print(
-                f"[GRADER] task={self.task_id} | ERROR: {str(e)}",
-                flush=True
-            )
-            return 0.0
-        except Exception as e:
-            print(f"[GRADER] task={self.task_id} | error={e}", flush=True)
-            return 0.0
+# 🔹 ADD THIS FUNCTION AT THE BOTTOM
+# This matches the call: grade(None, action, context_dict)
+def grade(obs_placeholder, action, context):
+    # Extract task_id from context if available
+    t_id = context.get("task_id", "unknown")
+    g = Grader(task_id=t_id)
+    # We pass the 'context' as the observation because it contains the true score
+    return g.grade(context, action)
