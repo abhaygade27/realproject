@@ -4,7 +4,7 @@ from typing import Dict
 class Observation(BaseModel):
     question: str
     student_answer: str
-    rubric: Dict[str, int]
+    rubric: Dict[str, int, any]
 
 class Action(BaseModel):
     score: float
