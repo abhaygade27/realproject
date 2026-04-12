@@ -2,32 +2,11 @@
 #
 # validate-submission.sh — OpenEnv Submission Validator
 #
-# Checks that your HF Space is live, Docker image builds, and openenv validate passes.
-#
-# Prerequisites:
-#   - Docker:       https://docs.docker.com/get-docker/
-#   - openenv-core: pip install openenv-core
-#   - curl (usually pre-installed)
-#
-# Run:
-#   curl -fsSL https://raw.githubusercontent.com/<owner>/<repo>/main/scripts/validate-submission.sh | bash -s -- <ping_url> [repo_dir]
-#
-#   Or download and run locally:
-#     chmod +x validate-submission.sh
-#     ./validate-submission.sh <ping_url> [repo_dir]
-#
-# Arguments:https
-#   ping_url   Your HuggingFace Space URL (e.g. https://your-space.hf.space)
-#   repo_dir   Path to your repo (default: current directory)
-#
-# Examples:
-#   ./validate-submission.sh https://my-team.hf.space
-#   ./validate-submission.sh https://my-team.hf.space ./my-repo
-#
 
 set -uo pipefail
 
-DOCKER_BUILD_TIMEOUT=600
+DOCKER_BUILD_TIMEOUT=1800
+
 if [ -t 1 ]; then
   RED='\033[0;31m'
   GREEN='\033[0;32m'
@@ -81,6 +60,7 @@ if ! REPO_DIR="$(cd "$REPO_DIR" 2>/dev/null && pwd)"; then
   printf "Error: directory '%s' not found\n" "${2:-.}"
   exit 1
 fi
+
 PING_URL="${PING_URL%/}"
 export PING_URL
 PASS=0
@@ -100,13 +80,15 @@ printf "${BOLD}========================================${NC}\n"
 printf "${BOLD}  OpenEnv Submission Validator${NC}\n"
 printf "${BOLD}========================================${NC}\n"
 log "Repo:C:/Users/Vitthal/OpenEnv/realproject"
-log "Ping URL: https://abhaygade-realprojectenv.hf.space/"
+log "Ping URL: $PING_URL"
 printf "\n"
 
+# ---------------- STEP 1 ----------------
 log "${BOLD}Step 1/3: Pinging HF Space${NC} ($PING_URL/reset) ..."
 
 CURL_OUTPUT=$(portable_mktemp "validate-curl")
 CLEANUP_FILES+=("$CURL_OUTPUT")
+
 HTTP_CODE=$(curl -s -o "$CURL_OUTPUT" -w "%{http_code}" -X POST \
   -H "Content-Type: application/json" -d '{}' \
   "$PING_URL/reset" --max-time 30 2>"$CURL_OUTPUT" || printf "000")
@@ -125,6 +107,7 @@ else
   stop_at "Step 1"
 fi
 
+# ---------------- STEP 2 ----------------
 log "${BOLD}Step 2/3: Running docker build${NC} ..."
 
 if ! command -v docker &>/dev/null; then
@@ -155,6 +138,7 @@ else
   stop_at "Step 2"
 fi
 
+# ---------------- STEP 3 ----------------
 log "${BOLD}Step 3/3: Running openenv validate${NC} ..."
 
 if ! command -v openenv &>/dev/null; then
