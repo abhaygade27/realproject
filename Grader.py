@@ -1,52 +1,41 @@
-# import json
-# from server.environment import ExamEnv
-# from server.models import Action
+# grader.py
 
-# def load_dataset(path="dataset.json"):
-#     """Load dataset.json and return list of tasks."""
-#     with open(path, "r", encoding="utf-8") as f:
-#         return json.load(f)["tasks"]
+def grade(question: str, student_answer: str, rubric: str) -> float:
+    """
+    Grades a student's answer based on a simple heuristic.
 
-# def grade_all_tasks():
-#     env = ExamEnv(dataset_path="dataset.json")
-#     tasks = load_dataset()
+    Args:
+        question (str): The question asked
+        student_answer (str): The student's response
+        rubric (str): Expected answer / guideline
 
-#     results = {}
+    Returns:
+        float: Score between 0.0 and 1.0
+    """
 
-#     for difficulty in ["easy", "medium", "hard"]:
-#         filtered = [t for t in tasks if t["difficulty"] == difficulty]
-#         if not filtered:
-#             continue
+    # Safety checks
+    if not student_answer or not rubric:
+        return 0.0
 
-#         print(f"\n--- Evaluating {difficulty.upper()} tasks ---")
-#         diffs = []
+    # Normalize text
+    student_answer = student_answer.lower().strip()
+    rubric = rubric.lower().strip()
 
-#         for task in filtered:
-#             # Reset environment with this difficulty
-#             obs = env.reset(difficulty=difficulty)
+    # Tokenize
+    student_words = set(student_answer.split())
+    rubric_words = set(rubric.split())
 
-#             # Create an Action using expected_score as proxy (baseline agent)
-#             action = Action(score=task["expected_score"])
+    if not rubric_words:
+        return 0.0
 
-#             # Step through environment
-#             obs, reward, done, info = env.step(action)
+    # Calculate overlap score
+    common_words = student_words.intersection(rubric_words)
+    score = len(common_words) / len(rubric_words)
 
-#             diff = abs(info["agent_score"] - info["expected_score"])
-#             diffs.append(diff)
+    # Clamp score between 0 and 1
+    score = max(0.0, min(1.0, score))
 
-#             print(f"Q: {obs.question}")
-#             print(f"Expected: {info['expected_score']}, Agent: {info['agent_score']}, Reward: {reward.value:.3f}\n")
-
-#         avg_diff = sum(diffs) / len(diffs) if diffs else 0.0
-#         results[difficulty] = avg_diff
-
-#     return results
-
-# if __name__ == "__main__":
-#     summary = grade_all_tasks()
-#     print("\n=== Final Grading Summary ===")
-#     for diff, avg in summary.items():
-#         print(f"{diff.capitalize()}: Avg difference = {avg:.3f}")
+    return score
 def grade(observation, action, info):
     """
     Calculates the reward based on the difference between expected and predicted scores.
