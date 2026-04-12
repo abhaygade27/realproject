@@ -70,6 +70,7 @@
 #         return 0.5
 
 # Grader.py
+# grader.py
 from typing import Dict, Any
 
 class Grader:
@@ -90,14 +91,14 @@ class Grader:
             diff = abs(true_score - pred_score) / 10.0
             reward = max(0.0, 1.0 - diff)
 
-            # 🔹 Log step for validator parsing
+            # 🔹 Structured log for validator
             print(
-                f"[GRADER] task={self.task_id} true_score={true_score:.2f} "
-                f"pred_score={pred_score:.2f} reward={reward:.3f}",
+                f"[GRADER] task={self.task_id} | true_score={true_score:.2f} "
+                f"| pred_score={pred_score:.2f} | reward={reward:.3f}",
                 flush=True
             )
 
             return reward
         except Exception as e:
-            print(f"[GRADER] task={self.task_id} error={e}", flush=True)
+            print(f"[GRADER] task={self.task_id} | error={e}", flush=True)
             return 0.0

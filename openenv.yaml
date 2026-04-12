@@ -1,57 +1,3 @@
-
-
-# name: ai-exam-evaluator
-# version: 0.1.0
-# description: >
-#   AI Exam Evaluator environment that grades student answers against rubrics
-#   with partial progress rewards (easy → medium → hard tasks).
-
-# authors:
-#   - name: Abhay Gade
-#     email: abhaygade27@gmail.com
-
-# license: MIT
-
-# # Entrypoint for the environment (FastAPI app)
-# entrypoint: server/app.py
-
-# # Dependencies required to run the environment
-# dependencies:
-#   - fastapi
-#   - uvicorn
-#   - requests
-#   - python-dotenv
-#   - openenv-core
-
-# # Environment specification
-# environment:
-#   observation_space:
-#     type: string
-#     description: "Student answer text input"
-#   action_space:
-#     type: string
-#     description: "Agent-generated rubric score or feedback"
-#   reward_space:
-#     type: float
-#     range: [0.0, 1.0]
-#     description: "Reward based on similarity between agent score and rubric score"
-
-# # Tasks definition (all tasks stored in one dataset.json)
-# tasks:
-#   - id: easy
-#     description: "Simple factual question grading"
-#     dataset: dataset.json
-#   - id: medium
-#     description: "Moderate reasoning question grading"
-#     dataset: dataset.json
-#   - id: hard
-#     description: "Complex analytical question grading"
-#     dataset: dataset.json
-
-# # Metadata for reproducibility
-# baseline_inference: inference.py
-# grader: Grader.py
-
 name: ai-exam-evaluator
 version: 0.1.0
 description: >
@@ -89,17 +35,16 @@ tasks:
   - id: easy
     description: "Simple factual question grading"
     dataset: dataset.json
-    grader: Grader.py
+    grader: grader.py
 
   - id: medium
     description: "Moderate reasoning question grading"
     dataset: dataset.json
-    grader: Grader.py
+    grader: grader.py
 
   - id: hard
     description: "Complex analytical question grading"
     dataset: dataset.json
-    grader: Grader.py
+    grader: grader.py
 
 baseline_inference: inference.py
-
